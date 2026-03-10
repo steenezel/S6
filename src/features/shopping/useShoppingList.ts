@@ -6,7 +6,7 @@ import {
   type UseMutationResult,
   type UseQueryResult,
 } from '@tanstack/react-query'
-import { supabase } from '../../lib/supabaseClient'
+import { supabase } from '../../lib/supabase'
 
 export type ShoppingCategory = 'supermarkt' | 'apotheek' | 'bureaugerei'
 

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { AlertTriangle, TrainFront, ArrowRight } from 'lucide-react'
@@ -32,13 +33,48 @@ type IrailApiResponse = {
   connection: IrailApiConnection[]
 }
 
-const FROM_STATION = 'Kortrijk'
-const TO_STATION = 'Gent-Sint-Pieters'
+type RouteConfig = {
+  id: string
+  label: string
+  from: string
+  to: string
+}
 
-async function fetchIrailConnections(): Promise<IrailConnection[]> {
+const ROUTES: RouteConfig[] = [
+  {
+    id: 'kt-gsp',
+    label: 'Kortrijk → Gent-Sint-Pieters',
+    from: 'Kortrijk',
+    to: 'Gent-Sint-Pieters',
+  },
+  {
+    id: 'gsp-kt',
+    label: 'Gent-Sint-Pieters → Kortrijk',
+    from: 'Gent-Sint-Pieters',
+    to: 'Kortrijk',
+  },
+  {
+    id: 'kt-gd',
+    label: 'Kortrijk → Gent-Dampoort',
+    from: 'Kortrijk',
+    to: 'Gent-Dampoort',
+  },
+  {
+    id: 'gd-kt',
+    label: 'Gent-Dampoort → Kortrijk',
+    from: 'Gent-Dampoort',
+    to: 'Kortrijk',
+  },
+]
+
+async function fetchIrailConnections(params: {
+  from: string
+  to: string
+}): Promise<IrailConnection[]> {
+  const { from, to } = params
   const url = new URL('https://api.irail.be/connections')
-  url.searchParams.set('from', FROM_STATION)
-  url.searchParams.set('to', TO_STATION)
+  url.searchParams.set('from', from)
+  url.searchParams.set('to', to)
   url.searchParams.set('format', 'json')
   url.searchParams.set('lang', 'nl')
   url.searchParams.set('fast', 'true')
@@ -60,7 +96,7 @@ async function fetchIrailConnections(): Promise<IrailConnection[]> {
     )
 
     const delayMinutes = Math.round((Number(c.departure.delay) || 0) / 60)
-    const toName = c.departure.direction?.name ?? TO_STATION
+    const toName = c.departure.direction?.name ?? to
 
     return {
       id: c.id ?? `conn-${index}`,
@@ -83,6 +119,10 @@ async function fetchIrailConnections(): Promise<IrailConnection[]> {
 }
 
 export const TrainTracker = () => {
+  const [activeRouteId, setActiveRouteId] = useState<string>('kt-gsp')
+  const activeRoute =
+    ROUTES.find((route) => route.id === activeRouteId) ?? ROUTES[0]
+
   const {
     data: connections,
     isLoading,
@@ -90,8 +130,8 @@ export const TrainTracker = () => {
     refetch,
     isFetching,
   } = useQuery({
-    queryKey: ['irail', FROM_STATION, TO_STATION],
-    queryFn: fetchIrailConnections,
+    queryKey: ['irail', activeRoute.from, activeRoute.to],
+    queryFn: () => fetchIrailConnections({ from: activeRoute.from, to: activeRoute.to }),
     refetchInterval: 60_000,
   })
 
@@ -106,7 +146,7 @@ export const TrainTracker = () => {
             NMBS / iRail live
           </h2>
           <p className="text-xs md:text-sm text-slate-400">
-            Volgende 3 treinen {FROM_STATION} → Gent (Sint-Pieters / Dampoort)
+            Kies een traject om de volgende treinen te zien.
           </p>
         </div>
         <button
@@ -119,7 +159,27 @@ export const TrainTracker = () => {
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col gap-3 px-4 pb-3 pt-1">
+      <div className="px-4 pt-1 pb-2">
+        <div className="grid grid-cols-2 gap-1.5 mb-2">
+          {ROUTES.map((route) => (
+            <button
+              key={route.id}
+              type="button"
+              onClick={() => setActiveRouteId(route.id)}
+              className={[
+                'rounded-full border px-2 py-1 text-[10px] text-left transition-colors',
+                activeRouteId === route.id
+                  ? 'bg-cyan-500/15 border-cyan-400/80 text-cyan-100'
+                  : 'bg-slate-900/70 border-slate-700/80 text-slate-300 hover:border-cyan-400/60 hover:text-cyan-100',
+              ].join(' ')}
+            >
+              {route.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col gap-3 px-4 pb-3 pt-0">
         {showSkeleton && (
           <div className="space-y-3">
             {[0, 1, 2].map((i) => (

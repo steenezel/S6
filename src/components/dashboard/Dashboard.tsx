@@ -1,12 +1,8 @@
 import { motion } from 'framer-motion'
-import {
-  House,
-  CalendarDays,
-  ShoppingBasket,
-  BarChart3,
-  TrainFront,
-} from 'lucide-react'
+import { House, CalendarDays, ShoppingBasket, BarChart3, TrainFront } from 'lucide-react'
 import { TrainTracker } from './TrainTracker'
+import { ShoppingList } from './ShoppingList'
+import { GoogleCalendarWidget } from './GoogleCalendarWidget'
 import { Card } from '../ui/card'
 import { Separator } from '../ui/separator'
 
@@ -74,19 +70,7 @@ export const Dashboard = ({ familyName = 'Family Hub' }: DashboardProps) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35 }}
               >
-                <Card className="bg-slate-900/60 border-slate-800/80 backdrop-blur-xl">
-                  <div className="p-4 pb-2">
-                    <h2 className="flex items-center gap-2 text-base md:text-lg font-semibold">
-                      <CalendarDays className="h-4 w-4 text-sky-300" />
-                      Eerstvolgende afspraken
-                    </h2>
-                  </div>
-                  <div className="p-4 pt-0 text-sm text-slate-400 space-y-3">
-                    <div className="rounded-xl border border-slate-800/80 bg-slate-900/50 p-4 text-xs text-slate-500">
-                      Google Calendar widget komt hier (mock data / API-ready).
-                    </div>
-                  </div>
-                </Card>
+                <GoogleCalendarWidget />
 
                 <Card className="bg-slate-900/60 border-slate-800/80 backdrop-blur-xl">
                   <div className="p-4 pb-2">
@@ -109,19 +93,7 @@ export const Dashboard = ({ familyName = 'Family Hub' }: DashboardProps) => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.05 }}
               >
-                <Card className="bg-slate-900/60 border-slate-800/80 backdrop-blur-xl">
-                  <div className="p-4 pb-2">
-                    <h2 className="flex items-center gap-2 text-base md:text-lg font-semibold">
-                      <ShoppingBasket className="h-4 w-4 text-emerald-300" />
-                      Realtime boodschappenlijst
-                    </h2>
-                  </div>
-                  <div className="p-4 pt-0 space-y-3 text-sm text-slate-400">
-                    <div className="rounded-xl border border-slate-800/80 bg-slate-900/50 p-4 text-xs text-slate-500">
-                      Supabase-gekoppelde boodschappenlijst komt hier (met PWA/offline).
-                    </div>
-                  </div>
-                </Card>
+                <ShoppingList />
               </motion.section>
             </div>
 
