@@ -94,8 +94,8 @@ export const Dashboard = ({
           <div className="max-w-7xl mx-auto px-6 md:px-10 py-5 flex items-center justify-between">
             <div className="flex flex-col text-left">
               <span className="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-bold mb-1">WELKOM THUIS</span>
-              <h1 className="text-xl md:text-2xl font-black text-white tracking-tight">
-                Goeiemorgen, <span className="text-emerald-400">{userName}</span> ✨
+              <h1 className="text-xl md:text-xl font-black text-white tracking-tight">
+                Welkom, <span className="text-emerald-400">{userName}</span> 🐇
               </h1>
             </div>
             
