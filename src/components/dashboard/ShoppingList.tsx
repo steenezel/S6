@@ -119,29 +119,32 @@ const ShoppingRow = ({ item, onToggle, onDelete, isCompleted = false }: any) => 
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0, x: -10 }}
-    className="group flex items-center gap-3 py-3 px-2 hover:bg-slate-800/20 transition-colors rounded-xl"
+    className="group flex items-center gap-3 py-2 px-2 hover:bg-slate-800/40 transition-colors rounded-xl border-b border-slate-800/30 last:border-0"
   >
+    {/* Checkbox */}
     <button
       onClick={() => onToggle({ id: item.id, isDone: !item.is_done })}
       className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
         isCompleted 
-          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' 
+          ? 'bg-emerald-500 border-emerald-500 text-slate-950' 
           : 'bg-slate-900 border-slate-700 text-transparent hover:border-emerald-500/50'
       }`}
     >
       <CheckSquare className="h-3 w-3" />
     </button>
 
+    {/* Tekst: text-slate-200 zorgt voor contrast op de donkere achtergrond */}
     <span className={`flex-1 font-bold text-sm text-left truncate ${
       isCompleted ? 'line-through text-slate-600' : 'text-slate-200'
     }`}>
       {item.title}
     </span>
 
+    {/* Vuilbakje: nu met text-slate-500 voor zichtbaarheid, wordt rood bij hover */}
     <button
       onClick={() => onDelete({ id: item.id })}
-      className="p-1.5 text-slate-700 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-      title="Verwijder"
+      className="p-1.5 text-slate-500 hover:text-red-500 transition-colors md:opacity-0 md:group-hover:opacity-100"
+      title="Verwijder item"
     >
       <Trash2 className="h-4 w-4" />
     </button>
