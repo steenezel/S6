@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
-import { TrainFront, ArrowRight, Clock, CalendarDays, ChevronRight } from 'lucide-react'
+import { TrainFront, Clock, CalendarDays, ChevronRight } from 'lucide-react'
 import { Card } from '../ui/card'
 
 type IrailConnection = {
