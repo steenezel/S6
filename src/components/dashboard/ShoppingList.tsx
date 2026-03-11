@@ -136,39 +136,51 @@ export const ShoppingList = () => {
                 Nog geen items. Voeg je eerste item toe ✨
               </li>
             )}
-            {items.map((item) => {
-              const isDone = item.is_done
-              return (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      toggleMutation.mutate({ id: item.id, isDone: !isDone })
-                    }
-                    className={[
-                      'w-full flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-xs md:text-sm transition-colors',
-                      'bg-slate-950/70 border-slate-800/80 hover:border-emerald-400/70',
-                      isDone ? 'opacity-60 line-through' : '',
-                    ].join(' ')}
-                  >
-                    <span
-                      className={[
-                        'inline-flex h-4 w-4 items-center justify-center rounded-md border text-[10px]',
-                        isDone
-                          ? 'bg-emerald-500 border-emerald-400 text-slate-950'
-                          : 'bg-slate-900 border-slate-700 text-slate-400',
-                      ].join(' ')}
-                    >
-                      <CheckSquare className="h-3 w-3" />
-                    </span>
-                    <span className="flex-1 truncate">{item.title}</span>
-                    <span className="text-[10px] uppercase tracking-wide text-slate-500">
-                      {item.category}
-                    </span>
-                  </button>
-                </li>
-              )
-            })}
+// Zoek in je code naar het map-gedeelte van de items en vervang het door dit blok:
+
+{items.map((item: any) => {
+  const isDone = item.is_done
+  return (
+    <li key={item.id}>
+      <button
+        type="button"
+        onClick={() =>
+          toggleMutation.mutate({ id: item.id, isDone: !isDone })
+        }
+        className={[
+          'w-full flex items-center gap-3 rounded-xl border px-3 py-3 text-left text-xs md:text-sm transition-all shadow-sm',
+          // Verbeterde achtergrond: donkerder en duidelijker contrast
+          'bg-slate-950/90 border-slate-800 hover:border-emerald-500/50',
+          isDone ? 'opacity-40' : 'opacity-100',
+        ].join(' ')}
+      >
+        <div
+          className={[
+            'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors',
+            isDone
+              ? 'bg-emerald-500 border-emerald-400 text-slate-950'
+              : 'bg-slate-900 border-slate-700 text-slate-500',
+          ].join(' ')}
+        >
+          <CheckSquare className="h-3.5 w-3.5" />
+        </div>
+        
+        {/* De tekst van het item: geforceerd naar wit voor maximale leesbaarheid */}
+        <span className={[
+          'flex-1 truncate font-medium text-slate-50', // text-slate-50 is bijna wit
+          isDone ? 'line-through text-slate-500' : ''
+        ].join(' ')}>
+          {item.title}
+        </span>
+
+        {/* Categorie-label: iets feller gemaakt */}
+        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-500/80 bg-emerald-500/5 px-2 py-0.5 rounded-md border border-emerald-500/10">
+          {item.category}
+        </span>
+      </button>
+    </li>
+  )
+})}
           </motion.ul>
         )}
       </div>
