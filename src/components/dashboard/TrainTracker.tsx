@@ -47,7 +47,7 @@ async function fetchIrailConnections(params: {
   url.searchParams.set('to', to)
   url.searchParams.set('date', formattedDate)
   url.searchParams.set('time', formattedTime)
-  url.searchParams.set('timesel', timeSel === 'departure' ? 'departure' : 'arrival')
+  url.searchParams.set('timesel', timeSel === 'departure' ? 'depart' : 'arrive')
   url.searchParams.set('format', 'json')
   url.searchParams.set('lang', 'nl')
 
@@ -58,9 +58,12 @@ async function fetchIrailConnections(params: {
   const rawConnections = Array.isArray(data.connection) ? data.connection : []
 
   return rawConnections.slice(0, 4).map((c: any, index: number) => {
-    const departure = new Date(Number(c.departure.time) * 1000)
-    const arrival = new Date(Number(c.arrival.time) * 1000)
-    return {
+    const departureTimeRaw = Number(c.departure.time) * 1000
+    const arrivalTimeRaw = Number(c.arrival.time) * 1000
+    
+    const departure = new Date(departureTimeRaw)
+    const arrival = new Date(arrivalTimeRaw)
+  return {
       id: c.id ?? `conn-${index}`,
       departureTime: departure.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }),
       arrivalTime: arrival.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }),
@@ -68,7 +71,7 @@ async function fetchIrailConnections(params: {
       platform: c.departure.platform ?? null,
       delayMinutes: Math.round((Number(c.departure.delay) || 0) / 60),
       to: c.departure.direction?.name ?? to,
-    }
+    } satisfies IrailConnection
   })
 }
 
@@ -172,9 +175,13 @@ export const TrainTracker = () => {
                 </div>
                 <div className="flex-1 text-left">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-black text-slate-900">{conn.departureTime}</span>
+                    <span className={`text-lg font-black ${timeSel === 'departure' ? 'text-slate-900' : 'text-slate-400'}`}>
+                      {conn.departureTime}
+                    </span>
                     <ArrowRight className="h-3 w-3 text-slate-400" />
-                    <span className="text-sm font-bold text-slate-500">{conn.arrivalTime}</span>
+                    <span className={`text-lg font-black ${timeSel === 'arrival' ? 'text-slate-900' : 'text-slate-400'}`}>
+                      {conn.arrivalTime}
+                    </span>
                   </div>
                   <div className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">Richting {conn.to}</div>
                 </div>
