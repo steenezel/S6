@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
-import { AlertTriangle, TrainFront, ArrowRight } from 'lucide-react'
+import { TrainFront, ArrowRight, Clock } from 'lucide-react'
 import { Card } from '../ui/card'
 import { Skeleton } from '../ui/skeleton'
 
@@ -15,24 +15,6 @@ type IrailConnection = {
   to: string
 }
 
-type IrailApiConnection = {
-  id: string
-  departure: {
-    time: string
-    delay: number
-    platform?: string
-    direction?: { name: string }
-  }
-  arrival: {
-    time: string
-  }
-  duration: string
-}
-
-type IrailApiResponse = {
-  connection: IrailApiConnection[]
-}
-
 type RouteConfig = {
   id: string
   label: string
@@ -41,265 +23,170 @@ type RouteConfig = {
 }
 
 const ROUTES: RouteConfig[] = [
-  {
-    id: 'kt-gsp',
-    label: 'Kortrijk → Gent-Sint-Pieters',
-    from: 'Kortrijk',
-    to: 'Gent-Sint-Pieters',
-  },
-  {
-    id: 'gsp-kt',
-    label: 'Gent-Sint-Pieters → Kortrijk',
-    from: 'Gent-Sint-Pieters',
-    to: 'Kortrijk',
-  },
-  {
-    id: 'kt-gd',
-    label: 'Kortrijk → Gent-Dampoort',
-    from: 'Kortrijk',
-    to: 'Gent-Dampoort',
-  },
-  {
-    id: 'gd-kt',
-    label: 'Gent-Dampoort → Kortrijk',
-    from: 'Gent-Dampoort',
-    to: 'Kortrijk',
-  },
+  { id: 'kt-gsp', label: 'Kortrijk → Gent-Sint-Pieters', from: 'Kortrijk', to: 'Gent-Sint-Pieters' },
+  { id: 'gsp-kt', label: 'Gent-Sint-Pieters → Kortrijk', from: 'Gent-Sint-Pieters', to: 'Kortrijk' },
+  { id: 'kt-gd', label: 'Kortrijk → Gent-Dampoort', from: 'Kortrijk', to: 'Gent-Dampoort' },
+  { id: 'gd-kt', label: 'Gent-Dampoort → Kortrijk', from: 'Gent-Dampoort', to: 'Kortrijk' },
 ]
 
 async function fetchIrailConnections(params: {
   from: string
   to: string
+  date: string
+  time: string
+  timeSel: 'departure' | 'arrival'
 }): Promise<IrailConnection[]> {
-  const { from, to } = params
+  const { from, to, date, time, timeSel } = params
+  
+  // iRail verwacht datum als ddmmyy en tijd als hhmm
+  const formattedDate = date.split('-').reverse().map(s => s.slice(-2)).join('')
+  const formattedTime = time.replace(':', '')
+
   const url = new URL('https://api.irail.be/connections')
   url.searchParams.set('from', from)
   url.searchParams.set('to', to)
+  url.searchParams.set('date', formattedDate)
+  url.searchParams.set('time', formattedTime)
+  url.searchParams.set('timesel', timeSel === 'departure' ? 'departure' : 'arrival')
   url.searchParams.set('format', 'json')
   url.searchParams.set('lang', 'nl')
-  url.searchParams.set('fast', 'true')
 
   const res = await fetch(url.toString())
-  if (!res.ok) {
-    throw new Error(`iRail request failed: ${res.status}`)
-  }
+  if (!res.ok) throw new Error(`iRail request failed: ${res.status}`)
 
-  const data = (await res.json()) as IrailApiResponse
+  const data = await res.json()
   const rawConnections = Array.isArray(data.connection) ? data.connection : []
 
-  const normalized = rawConnections.slice(0, 3).map((c, index) => {
+  return rawConnections.slice(0, 4).map((c: any, index: number) => {
     const departure = new Date(Number(c.departure.time) * 1000)
     const arrival = new Date(Number(c.arrival.time) * 1000)
-
-    const durationMinutes = Math.round(
-      (arrival.getTime() - departure.getTime()) / 1000 / 60,
-    )
-
-    const delayMinutes = Math.round((Number(c.departure.delay) || 0) / 60)
-    const toName = c.departure.direction?.name ?? to
-
     return {
       id: c.id ?? `conn-${index}`,
-      departureTime: departure.toLocaleTimeString('nl-BE', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-      arrivalTime: arrival.toLocaleTimeString('nl-BE', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-      durationMinutes,
+      departureTime: departure.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }),
+      arrivalTime: arrival.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }),
+      durationMinutes: Math.round((arrival.getTime() - departure.getTime()) / 1000 / 60),
       platform: c.departure.platform ?? null,
-      delayMinutes,
-      to: toName,
-    } satisfies IrailConnection
+      delayMinutes: Math.round((Number(c.departure.delay) || 0) / 60),
+      to: c.departure.direction?.name ?? to,
+    }
   })
-
-  return normalized
 }
 
 export const TrainTracker = () => {
   const [activeRouteId, setActiveRouteId] = useState<string>('kt-gsp')
-  const activeRoute =
-    ROUTES.find((route) => route.id === activeRouteId) ?? ROUTES[0]
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [time, setTime] = useState(new Date().toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }))
+  const [timeSel, setTimeSel] = useState<'departure' | 'arrival'>('departure')
 
-  const {
-    data: connections,
-    isLoading,
-    isError,
-    refetch,
-    isFetching,
-  } = useQuery({
-    queryKey: ['irail', activeRoute.from, activeRoute.to],
-    queryFn: () => fetchIrailConnections({ from: activeRoute.from, to: activeRoute.to }),
-    refetchInterval: 60_000,
+  const activeRoute = ROUTES.find((route) => route.id === activeRouteId) ?? ROUTES[0]
+
+  const { data: connections, isLoading, isError, refetch, isFetching } = useQuery({
+    queryKey: ['irail', activeRoute.from, activeRoute.to, date, time, timeSel],
+    queryFn: () => fetchIrailConnections({ from: activeRoute.from, to: activeRoute.to, date, time, timeSel }),
+    refetchInterval: timeSel === 'departure' && date === new Date().toISOString().split('T')[0] ? 60000 : false,
   })
 
-  const showSkeleton = isLoading || !connections
-
   return (
-    <Card className="bg-slate-900/60 border-slate-800/80 backdrop-blur-xl h-full flex flex-col">
-      <div className="p-4 pb-2 flex items-center justify-between gap-2">
-        <div>
-          <h2 className="flex items-center gap-2 text-base md:text-lg font-semibold">
-            <TrainFront className="h-4 w-4 text-cyan-300" />
-            NMBS / iRail live
-          </h2>
-          <p className="text-xs md:text-sm text-slate-400">
-            Kies een traject om de volgende treinen te zien.
-          </p>
+    <Card className="bg-[#0B101D]/60 border-slate-700/50 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col h-full">
+      <div className="p-6 pb-2 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center">
+            <TrainFront className="h-6 w-6 text-cyan-400" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white tracking-tight text-left">NMBS Live</h2>
+            <p className="text-[10px] text-cyan-500/70 font-black uppercase tracking-[0.2em] text-left">Trajectplanner</p>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="inline-flex items-center gap-1 rounded-full border border-slate-700/80 bg-slate-900/80 px-2 py-1 text-[10px] text-slate-300 hover:border-cyan-400/70 hover:text-cyan-200 transition-colors"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400/90 animate-pulse" />
-          {isFetching ? 'Refresh...' : 'Refresh'}
+        <button onClick={() => refetch()} className="text-slate-400 hover:text-cyan-400 transition-colors">
+          <Clock className={`h-5 w-5 ${isFetching ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
-      <div className="px-4 pt-1 pb-2">
-        <div className="grid grid-cols-2 gap-1.5 mb-2">
+      <div className="px-6 py-4 space-y-4">
+        {/* Route Selectie - Verbeterde leesbaarheid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {ROUTES.map((route) => (
             <button
               key={route.id}
-              type="button"
               onClick={() => setActiveRouteId(route.id)}
-              className={[
-                'rounded-full border px-2 py-1 text-[10px] text-left transition-colors',
+              className={`px-4 py-3 rounded-2xl border text-xs font-bold transition-all text-left ${
                 activeRouteId === route.id
-                  ? 'bg-cyan-500/15 border-cyan-400/80 text-cyan-100'
-                  : 'bg-slate-900/70 border-slate-700/80 text-slate-300 hover:border-cyan-400/60 hover:text-cyan-100',
-              ].join(' ')}
+                  ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-lg shadow-cyan-500/20'
+                  : 'bg-slate-900/50 border-slate-700 text-slate-300 hover:border-slate-500'
+              }`}
             >
               {route.label}
             </button>
           ))}
         </div>
-      </div>
 
-      <div className="flex-1 flex flex-col gap-3 px-4 pb-3 pt-0">
-        {showSkeleton && (
-          <div className="space-y-3">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="rounded-xl border border-slate-800/80 bg-slate-950/60 px-3 py-3 flex items-center gap-3"
-              >
-                <Skeleton className="h-10 w-10 rounded-2xl bg-slate-800/70" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-3 w-24 bg-slate-800/70" />
-                  <Skeleton className="h-3 w-32 bg-slate-800/70" />
-                </div>
-                <Skeleton className="h-3 w-10 bg-slate-800/70" />
-              </div>
-            ))}
+        {/* Tijd & Datum Selector */}
+        <div className="bg-slate-950/40 p-4 rounded-[1.5rem] border border-slate-800/50 flex flex-wrap gap-4 items-end">
+          <div className="flex-1 min-w-[120px]">
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Datum</label>
+            <input 
+              type="date" 
+              value={date} 
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-cyan-500 transition-colors"
+            />
           </div>
-        )}
-
-        {!showSkeleton && isError && (
-          <div className="rounded-xl border border-red-500/50 bg-red-950/40 px-3 py-3 text-xs text-red-200 flex items-start gap-2">
-            <AlertTriangle className="h-4 w-4 mt-0.5 text-red-300" />
-            <div className="space-y-1">
-              <div className="font-medium">Kon iRail data niet laden</div>
-              <p className="text-[11px] text-red-200/80">
-                Check je internetverbinding of probeer het later opnieuw.
-              </p>
-              <button
-                type="button"
-                onClick={() => refetch()}
-                className="mt-1 inline-flex items-center gap-1 rounded-full border border-red-400/60 px-2 py-0.5 text-[10px] hover:bg-red-500/10"
-              >
-                Opnieuw proberen
-              </button>
-            </div>
+          <div className="flex-1 min-w-[100px]">
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Tijd</label>
+            <input 
+              type="time" 
+              value={time} 
+              onChange={(e) => setTime(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-cyan-500 transition-colors"
+            />
           </div>
-        )}
-
-        {!showSkeleton && connections && !isError && (
-          <motion.ul
-            className="space-y-3"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: { opacity: 0, y: 8 },
-              visible: {
-                opacity: 1,
-                y: 0,
-                transition: { staggerChildren: 0.06, duration: 0.25 },
-              },
-            }}
+          <select 
+            value={timeSel} 
+            onChange={(e) => setTimeSel(e.target.value as 'departure' | 'arrival')}
+            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-cyan-400 font-bold outline-none"
           >
-            {connections.map((conn) => {
-              const isDelayed = conn.delayMinutes > 0
-              return (
-                <motion.li
-                  key={conn.id}
-                  variants={{
-                    hidden: { opacity: 0, y: 8 },
-                    visible: { opacity: 1, y: 0 },
-                  }}
-                  className={[
-                    'rounded-2xl border px-3 py-3 flex items-center gap-3 text-xs md:text-sm',
-                    'bg-slate-950/60 border-slate-800/80',
-                    isDelayed ? 'shadow-[0_0_0_1px_rgba(248,113,113,0.3)]' : '',
-                  ].join(' ')}
-                >
-                  <div className="h-10 w-10 rounded-2xl bg-slate-900/80 border border-slate-700/80 flex items-center justify-center">
-                    <TrainFront
-                      className={[
-                        'h-5 w-5',
-                        isDelayed ? 'text-red-300' : 'text-cyan-300',
-                      ].join(' ')}
-                    />
-                  </div>
-                  <div className="flex-1 flex flex-col gap-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 font-medium text-slate-50">
-                        <span>{conn.departureTime}</span>
-                        <ArrowRight className="h-3 w-3 text-slate-500" />
-                        <span className="text-slate-300">{conn.arrivalTime}</span>
-                      </div>
-                      <span className="text-[11px] text-slate-400">
-                        ± {conn.durationMinutes} min
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between gap-2 text-[11px] text-slate-400">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate max-w-[110px]">
-                          Richting {conn.to}
-                        </span>
-                        {conn.platform && (
-                          <span className="inline-flex items-center rounded-full bg-slate-900/80 border border-slate-700/80 px-2 py-0.5 text-[10px] text-slate-200">
-                            Perron {conn.platform}
-                          </span>
-                        )}
-                      </div>
-                      {isDelayed ? (
-                        <div className="inline-flex items-center gap-1 rounded-full bg-red-900/40 border border-red-500/60 px-2 py-0.5 text-[10px] text-red-100">
-                          <AlertTriangle className="h-3 w-3 text-red-300" />
-                          +{conn.delayMinutes} min
-                        </div>
-                      ) : (
-                        <span className="text-[10px] text-emerald-300">
-                          Op tijd
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </motion.li>
-              )
-            })}
-          </motion.ul>
-        )}
-      </div>
+            <option value="departure">Vertrek</option>
+            <option value="arrival">Aankomst</option>
+          </select>
+        </div>
 
-      <div className="px-4 pb-3 pt-1 text-[10px] text-slate-500 flex items-center justify-between">
-        <span>Data via iRail API (NMBS)</span>
-        <span className="text-slate-600">Auto-refresh elke 60s · Beta</span>
+        {/* Resultaten Lijst */}
+        <div className="space-y-3">
+          {isLoading ? (
+            <Skeleton className="h-20 w-full rounded-2xl bg-slate-800" />
+          ) : isError ? (
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-xs">
+              Fout bij ophalen treindata. Probeer later opnieuw.
+            </div>
+          ) : (
+            connections?.map((conn: IrailConnection) => (
+              <motion.div 
+                key={conn.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="bg-white p-4 rounded-[1.5rem] flex items-center gap-4 shadow-sm border border-slate-200"
+              >
+                <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${conn.delayMinutes > 0 ? 'bg-red-100' : 'bg-cyan-50'}`}>
+                  <TrainFront className={`h-5 w-5 ${conn.delayMinutes > 0 ? 'text-red-500' : 'text-cyan-600'}`} />
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-black text-slate-900">{conn.departureTime}</span>
+                    <ArrowRight className="h-3 w-3 text-slate-400" />
+                    <span className="text-sm font-bold text-slate-500">{conn.arrivalTime}</span>
+                  </div>
+                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">Richting {conn.to}</div>
+                </div>
+                <div className="text-right">
+                  {conn.platform && <div className="text-xs font-black text-slate-900">P{conn.platform}</div>}
+                  {conn.delayMinutes > 0 && <div className="text-[10px] font-bold text-red-500">+{conn.delayMinutes}'</div>}
+                </div>
+              </motion.div>
+            ))
+          )}
+        </div>
       </div>
     </Card>
   )
 }
-
