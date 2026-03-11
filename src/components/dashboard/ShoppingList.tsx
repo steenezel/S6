@@ -6,23 +6,14 @@ import {
   useShoppingList,
   useToggleShoppingItem,
   useDeleteShoppingItem,
-  type ShoppingCategory,
 } from '../../features/shopping/useShoppingList'
 import { Card } from '../ui/card'
 
-const CATEGORIES: { id: ShoppingCategory | 'all'; label: string }[] = [
-  { id: 'all', label: 'Alles' },
-  { id: 'supermarkt', label: 'Winkel' },
-  { id: 'apotheek', label: 'Apotheek' },
-  { id: 'bureaugerei', label: 'Bureau' },
-]
-
 export const ShoppingList = () => {
-  const [filter, setFilter] = useState<ShoppingCategory | 'all'>('all')
   const [input, setInput] = useState('')
-  const [category] = useState<ShoppingCategory>('supermarkt')
 
-  const { data } = useShoppingList({ category: filter })
+  // We laden alles in één lijst zonder filters
+  const { data } = useShoppingList({ category: 'all' })
   const toggleMutation = useToggleShoppingItem()
   const addMutation = useAddShoppingItem()
   const deleteMutation = useDeleteShoppingItem()
@@ -30,7 +21,10 @@ export const ShoppingList = () => {
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim()) return
-    addMutation.mutate({ title: input.trim(), category })
+    
+    // We sturen 'supermarkt' als standaardwaarde mee naar de database 
+    // zodat de tabelstructuur niet breekt, maar tonen het niet meer.
+    addMutation.mutate({ title: input.trim(), category: 'supermarkt' })
     setInput('')
   }
 
@@ -47,60 +41,65 @@ export const ShoppingList = () => {
           </div>
           <div>
             <h2 className="text-xl font-bold text-white tracking-tight">Boodschappen</h2>
-            <p className="text-[10px] text-emerald-500/70 font-black uppercase tracking-[0.2em]">Realtime Sync</p>
+            <p className="text-[10px] text-emerald-500/70 font-black uppercase tracking-[0.2em]">Gezinslijst</p>
           </div>
         </div>
       </div>
 
       <div className="px-6 pt-2 pb-6 space-y-4">
-        <div className="flex flex-wrap gap-2">
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => setFilter(c.id as ShoppingCategory | 'all')}
-              className={`px-3 py-1.5 rounded-full border text-[11px] font-bold uppercase transition-all ${
-                filter === c.id ? 'border-emerald-500 bg-emerald-500/20 text-emerald-400' : 'border-slate-700 text-slate-400'
-              }`}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
-
+        {/* Compacte Input Sectie */}
         <form onSubmit={handleAdd} className="flex gap-2">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Nodig..."
-            className="flex-1 rounded-2xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500/40 outline-none"
+            placeholder="Nodig voor thuis..."
+            className="flex-1 rounded-2xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500/40 outline-none transition-all"
           />
-          <button type="submit" disabled={addMutation.isPending} className="bg-emerald-500 text-slate-950 px-4 py-3 rounded-2xl font-bold">
+          <button 
+            type="submit" 
+            disabled={addMutation.isPending} 
+            className="bg-emerald-500 text-slate-950 px-5 py-3 rounded-2xl font-bold hover:bg-emerald-400 transition-colors"
+          >
             <Plus className="h-5 w-5" />
           </button>
         </form>
 
-        <div className="space-y-6 max-h-[450px] overflow-y-auto pr-2 custom-scrollbar text-left">
+        <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar text-left">
           {/* ACTIEVE ITEMS */}
           <ul className="space-y-2">
             <AnimatePresence mode="popLayout">
               {activeItems.map((item: any) => (
-                <ShoppingRow key={item.id} item={item} onToggle={toggleMutation.mutate} onDelete={deleteMutation.mutate} />
+                <ShoppingRow 
+                  key={item.id} 
+                  item={item} 
+                  onToggle={toggleMutation.mutate} 
+                  onDelete={deleteMutation.mutate} 
+                />
               ))}
             </AnimatePresence>
+            {activeItems.length === 0 && completedItems.length === 0 && (
+              <p className="text-slate-500 text-sm italic py-4">De lijst is leeg.</p>
+            )}
           </ul>
 
-          {/* GEKOCHTE ITEMS (Google Keep stijl) */}
+          {/* GEKOCHTE ITEMS */}
           {completedItems.length > 0 && (
             <div className="pt-4 border-t border-slate-800/50">
               <div className="flex items-center gap-2 mb-3 text-slate-500">
                 <History className="h-3.5 w-3.5" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Gekocht</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest">Onlangs gekocht</span>
               </div>
               <ul className="space-y-2">
                 <AnimatePresence mode="popLayout">
                   {completedItems.map((item: any) => (
-                    <ShoppingRow key={item.id} item={item} onToggle={toggleMutation.mutate} onDelete={deleteMutation.mutate} isCompleted />
+                    <ShoppingRow 
+                      key={item.id} 
+                      item={item} 
+                      onToggle={toggleMutation.mutate} 
+                      onDelete={deleteMutation.mutate} 
+                      isCompleted 
+                    />
                   ))}
                 </AnimatePresence>
               </ul>
@@ -125,7 +124,7 @@ const ShoppingRow = ({ item, onToggle, onDelete, isCompleted = false }: any) => 
     <button
       onClick={() => onToggle({ id: item.id, isDone: !item.is_done })}
       className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 transition-all ${
-        isCompleted ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-slate-50 border-slate-200 text-transparent'
+        isCompleted ? 'bg-emerald-500 border-emerald-400 text-white' : 'bg-slate-50 border-slate-200 text-transparent'
       }`}
     >
       <CheckSquare className="h-4 w-4" />
@@ -135,18 +134,13 @@ const ShoppingRow = ({ item, onToggle, onDelete, isCompleted = false }: any) => 
       {item.title}
     </span>
 
-    <div className="flex items-center gap-2">
-      <span className="text-[9px] font-black uppercase tracking-tighter bg-slate-100 text-slate-500 px-2 py-1 rounded-md border border-slate-200">
-        {item.category}
-      </span>
-      
-      {/* HET VUILBAKJE */}
-      <button
-        onClick={() => onDelete({ id: item.id })}
-        className="p-1.5 text-slate-300 hover:text-red-500 transition-colors"
-      >
-        <Trash2 className="h-4 w-4" />
-      </button>
-    </div>
+    {/* Vuilbakje nu altijd subtiel aanwezig voor snelle opkuis */}
+    <button
+      onClick={() => onDelete({ id: item.id })}
+      className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"
+      title="Verwijder item"
+    >
+      <Trash2 className="h-4 w-4" />
+    </button>
   </motion.li>
 )
