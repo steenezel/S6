@@ -11,25 +11,24 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Family Hub',
-        short_name: 'FamHub',
-        start_url: '/',
-        display: 'standalone',
-        background_color: '#020617',
-        theme_color: '#0f172a',
-        icons: [
-          {
-            src: '/pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: '/pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-          },
-        ],
+    name: 'S6 Gezinsapp',      // De volledige naam
+    short_name: 'S6 Hub',      // De naam onder het icoontje op je gsm
+    description: 'Centrale hub voor de familie Steelant',
+    theme_color: '#06080F',    // Match dit met je nieuwe donkere achtergrond
+    background_color: '#06080F',
+    icons: [
+      {
+        src: '/pwa-192x192.png',
+        sizes: '192x192',
+        type: 'image/png'
       },
+      {
+        src: '/pwa-512x512.png',
+        sizes: '512x512',
+        type: 'image/png'
+      }
+    ]
+  }
     }),
   ],
 })
