@@ -3,7 +3,6 @@ import { supabase } from './lib/supabase';
 import { Dashboard } from './components/dashboard/Dashboard';
 import * as TQ from '@tanstack/react-query';
 
-// 1. Maak de "manager" aan voor je data-fetching
 const queryClient = new (TQ as any).QueryClient();
 
 export default function App() {
@@ -23,6 +22,22 @@ export default function App() {
     return () => subscription?.unsubscribe();
   }, []);
 
+  // Verbeterde inlogfunctie met expliciete Google Calendar rechten
+  const handleLogin = async () => {
+    await (supabase as any).auth.signInWithOAuth({ 
+      provider: 'google',
+      options: { 
+        redirectTo: window.location.origin,
+        queryParams: { 
+          prompt: 'consent', // Dwingt Google om het toestemmingsscherm te tonen
+          access_type: 'offline', // Nodig voor het verversen van tokens
+          // Voeg hier de specifieke scopes toe voor de agenda
+          scope: 'openid email profile https://www.googleapis.com/auth/calendar.readonly'
+        }
+      } 
+    });
+  };
+
   if (loading) return (
     <div className="min-h-screen bg-[#06080F] flex items-center justify-center text-white font-sans">
       <div className="animate-pulse flex flex-col items-center">
@@ -32,8 +47,7 @@ export default function App() {
     </div>
   );
 
- return (
-    // Hier gebruiken we de provider met de geforceerde client
+  return (
     <TQ.QueryClientProvider client={queryClient}>
       {!session ? (
         <div className="min-h-screen bg-[#06080F] flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden text-center">
@@ -43,13 +57,7 @@ export default function App() {
           <p className="text-slate-500 mb-10 tracking-[0.2em] font-bold text-xs uppercase">Steelant Family Hub</p>
           
           <button 
-            onClick={() => (supabase as any).auth.signInWithOAuth({ 
-              provider: 'google',
-              options: { 
-                redirectTo: window.location.origin,
-                queryParams: { prompt: 'consent', access_type: 'offline' }
-              } 
-            })}
+            onClick={handleLogin}
             className="bg-white text-black px-12 py-4 rounded-full font-bold hover:scale-105 transition-all shadow-[0_0_50px_rgba(255,255,255,0.15)] relative z-10"
           >
             Inloggen met Google

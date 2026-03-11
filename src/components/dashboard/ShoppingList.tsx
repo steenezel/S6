@@ -167,9 +167,10 @@ export const ShoppingList = () => {
         
         {/* De tekst van het item: geforceerd naar wit voor maximale leesbaarheid */}
         <span className={[
-          'flex-1 truncate font-medium text-slate-50', // text-slate-50 is bijna wit
-          isDone ? 'line-through text-slate-500' : ''
-        ].join(' ')}>
+          'flex-1 truncate font-semibold',
+  // We forceren hier een donkere kleur (slate-900) voor maximale leesbaarheid op witte balken
+          isDone ? 'line-through text-slate-400' : 'text-slate-900'
+          ].join(' ')}>
           {item.title}
         </span>
 
