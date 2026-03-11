@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
-import { TrainFront, Clock, CalendarDays, ChevronRight } from 'lucide-react'
+import { Clock, CalendarDays, ChevronRight } from 'lucide-react'
 import { Card } from '../ui/card'
+import { Train } from "@phosphor-icons/react";
 
 type IrailConnection = {
   id: string
@@ -58,9 +59,9 @@ export const TrainTracker = () => {
       <div className="p-5 border-b border-slate-800/60 bg-slate-900/20 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
-            <TrainFront className="h-5 w-5 text-cyan-400" />
+            <Train size={24} weight="bold" color="#22d3ee" />
           </div>
-          <h2 className="text-sm font-black uppercase tracking-widest text-slate-400">NMBS Realtime</h2>
+          <h2 className="text-sm font-black uppercase tracking-widest text-slate-400">Met de trein naar UGent!</h2>
         </div>
         <div className={`h-2 w-2 rounded-full ${isFetching ? 'bg-cyan-500 animate-pulse' : 'bg-slate-700'}`} />
       </div>
@@ -113,16 +114,16 @@ export const TrainTracker = () => {
                 </div>
                 <ChevronRight className="h-4 w-4 text-slate-700" />
                 <div className="text-left leading-none">
-                  <div className="text-sm font-bold text-slate-400">{conn.arrivalTime}</div>
-                  <div className="text-[9px] text-slate-600 mt-1 uppercase font-bold tracking-tighter">
-                    Platform {conn.platform || '--'}
+                  <div className="text-base font-bold text-slate-200">{conn.arrivalTime}</div>
+                  <div className="text-[10px] text-slate-200 mt-1 uppercase font-bold tracking-tighter">
+                    Perron {conn.platform || '--'}
                   </div>
                 </div>
               </div>
 
               <div className="text-right">
-                <div className="text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Richting</div>
-                <div className="text-xs font-bold text-cyan-400/80 truncate max-w-[80px]">{conn.to}</div>
+                <div className="text-[10px] font-black text-slate-200 uppercase tracking-tighter mb-1">Richting</div>
+                <div className="text-sm tailwind font size font-bold text-cyan-400/80 truncate max-w-[80px]">{conn.to}</div>
               </div>
             </motion.div>
           ))}
