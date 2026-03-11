@@ -1,140 +1,74 @@
-import { useEffect } from 'react'
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  type UseMutationResult,
-  type UseQueryResult,
-} from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 
 export type ShoppingCategory = 'supermarkt' | 'apotheek' | 'bureaugerei'
 
-export type ShoppingListItem = {
-  id: string
-  household_id: string | null
-  title: string
-  category: ShoppingCategory
-  is_done: boolean
-  created_at: string
-  updated_at: string
-}
-
-const SHOPPING_LIST_KEY = ['shopping_list']
-
-type UseShoppingListOptions = {
-  category?: ShoppingCategory | 'all'
-}
-
-export const useShoppingList = (
-  options: UseShoppingListOptions = {},
-): UseQueryResult<ShoppingListItem[]> => {
-  const { category = 'all' } = options
-  const queryClient = useQueryClient()
-
-  const query = useQuery({
-    queryKey: [...SHOPPING_LIST_KEY, { category }],
+export const useShoppingList = (options: { category: ShoppingCategory | 'all' }) => {
+  return useQuery({
+    queryKey: ['shopping-list', options.category],
     queryFn: async () => {
-      let queryBuilder = supabase
+      let query = supabase
         .from('shopping_list')
         .select('*')
-        .order('created_at', { ascending: true })
+        .order('is_done', { ascending: true })
+        .order('created_at', { ascending: false })
 
-      if (category !== 'all') {
-        queryBuilder = queryBuilder.eq('category', category)
+      if (options.category !== 'all') {
+        query = query.eq('category', options.category)
       }
 
-      const { data, error } = await queryBuilder
-      if (error) {
-        throw error
-      }
-
-      return (data ?? []) as ShoppingListItem[]
+      const { data, error } = await query
+      if (error) throw error
+      return data
     },
   })
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('shopping_list_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'shopping_list',
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: SHOPPING_LIST_KEY })
-        },
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [queryClient])
-
-  return query
 }
 
-type ToggleArgs = {
-  id: string
-  isDone: boolean
-}
-
-export const useToggleShoppingItem = (): UseMutationResult<
-  void,
-  unknown,
-  ToggleArgs
-> => {
+export const useAddShoppingItem = () => {
   const queryClient = useQueryClient()
-
   return useMutation({
-    mutationFn: async ({ id, isDone }: ToggleArgs) => {
-      const { error } = await supabase
+    mutationFn: async (item: { title: string; category: ShoppingCategory }) => {
+      const { data, error } = await supabase.from('shopping_list').insert([item]).select()
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shopping-list'] })
+    },
+  })
+}
+
+export const useToggleShoppingItem = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, isDone }: { id: string; isDone: boolean }) => {
+      const { data, error } = await supabase
         .from('shopping_list')
         .update({ is_done: isDone })
         .eq('id', id)
-
-      if (error) {
-        throw error
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SHOPPING_LIST_KEY })
-    },
-  })
-}
-
-type AddItemArgs = {
-  title: string
-  category: ShoppingCategory
-}
-
-export const useAddShoppingItem = (): UseMutationResult<
-  ShoppingListItem | null,
-  unknown,
-  AddItemArgs
-> => {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({ title, category }: AddItemArgs) => {
-      const { data, error } = await supabase
-        .from('shopping_list')
-        .insert({ title, category })
         .select()
-        .single()
-
-      if (error) {
-        throw error
-      }
-
-      return data as ShoppingListItem | null
+      if (error) throw error
+      return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SHOPPING_LIST_KEY })
+      queryClient.invalidateQueries({ queryKey: ['shopping-list'] })
     },
   })
 }
 
+// NIEUW: De delete functie
+export const useDeleteShoppingItem = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id }: { id: string }) => {
+      const { error } = await supabase
+        .from('shopping_list')
+        .delete()
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shopping-list'] })
+    },
+  })
+}
