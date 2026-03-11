@@ -39,9 +39,9 @@ async function fetchIrailConnections(params: {
 }): Promise<IrailConnection[]> {
   const { from, to, date, time, timeSel } = params
   
-  // ddmmyy formaat voor iRail
+  // Datum van YYYY-MM-DD naar DDMMYY
   const formattedDate = date.split('-').reverse().map(s => s.slice(-2)).join('')
-  // hhmm formaat voor iRail
+  // Tijd van HH:MM naar HHMM
   const formattedTime = time.replace(':', '')
 
   const url = new URL('https://api.irail.be/connections')
@@ -49,6 +49,7 @@ async function fetchIrailConnections(params: {
   url.searchParams.set('to', to)
   url.searchParams.set('date', formattedDate)
   url.searchParams.set('time', formattedTime)
+  // iRail API parameters zijn 'depart' of 'arrive'
   url.searchParams.set('timesel', timeSel === 'departure' ? 'depart' : 'arrive')
   url.searchParams.set('format', 'json')
   url.searchParams.set('lang', 'nl')
@@ -58,6 +59,10 @@ async function fetchIrailConnections(params: {
 
   const data = await res.json()
   const rawConnections = Array.isArray(data.connection) ? data.connection : []
+
+  // Maak een Date object van de gevraagde tijd om mee te vergelijken
+  const targetDate = new Date(`${date}T${time}:00`)
+  const targetTimestamp = targetDate.getTime()
 
   const mapped = rawConnections.map((c: any, index: number) => {
     const depTime = Number(c.departure.time) * 1000
@@ -76,16 +81,16 @@ async function fetchIrailConnections(params: {
     }
   })
 
-  // SORTERING LOGICA:
   if (timeSel === 'arrival') {
-    // Bij aankomst: sorteer chronologisch zodat de VROEGSTE trein eerst staat
-    // Maar filter enkel de treinen die relevant zijn voor het gevraagde blok
+    // FILTER: Alleen treinen die aankomen VÓÓR of OP het gekozen tijdstip
+    // SORTERING: De trein die het dichtst bij het tijdstip aankomt bovenaan (laatste eerst)
     return mapped
-      .sort((a: any, b: any) => a.arrivalTimeRaw - b.arrivalTimeRaw)
+      .filter((c: any) => c.arrivalTimeRaw <= targetTimestamp + 60000) // +1 min marge
+      .sort((a: any, b: any) => b.arrivalTimeRaw - a.arrivalTimeRaw)
       .slice(0, 4)
   }
 
-  // Bij vertrek: gewoon chronologisch op vertrek
+  // Bij vertrek: Gewoon chronologisch vanaf nu
   return mapped
     .sort((a: any, b: any) => a.departureTimeRaw - b.departureTimeRaw)
     .slice(0, 4)
@@ -166,7 +171,9 @@ export const TrainTracker = () => {
             </button>
             <button 
               onClick={() => setTimeSel('arrival')}
-              className={`flex-1 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all ${timeSel === 'arrival' ? 'bg-cyan-500 text-slate-950' : 'text-slate-500'}`}
+              className={`flex-1 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all ${
+                timeSel === 'arrival' ? 'bg-cyan-500 text-slate-950 shadow-lg' : 'text-slate-500'
+              }`}
             >
               Aankomst
             </button>
