@@ -37,35 +37,37 @@ export const ShoppingList = () => {
   const items = data ?? []
 
   return (
-    <Card className="bg-slate-900/60 border-slate-800/80 backdrop-blur-xl">
-      <div className="p-4 pb-2 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center">
-            <ShoppingCart className="h-4 w-4 text-emerald-300" />
+    <Card className="bg-[#0B101D]/60 border-slate-700/50 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl">
+      {/* Header sectie */}
+      <div className="p-6 pb-2 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-lg">
+            <ShoppingCart className="h-6 w-6 text-emerald-400" />
           </div>
           <div>
-            <h2 className="text-base md:text-lg font-semibold text-slate-50">
-              Realtime boodschappenlijst
+            <h2 className="text-xl font-bold text-white tracking-tight">
+              Boodschappen
             </h2>
-            <p className="text-xs text-slate-400">
-              Supabase + realtime + PWA-friendly.
+            <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">
+              Realtime lijst
             </p>
           </div>
         </div>
       </div>
 
-      <div className="px-4 pt-1 pb-3 space-y-3">
-        <div className="flex flex-wrap gap-1.5 text-[11px]">
+      <div className="px-6 pt-2 pb-6 space-y-4">
+        {/* Categorie Filters */}
+        <div className="flex flex-wrap gap-2 text-[11px]">
           {CATEGORIES.map((c) => (
             <button
               key={c.id}
               type="button"
               onClick={() => setFilter(c.id as ShoppingCategory | 'all')}
               className={[
-                'px-2 py-1 rounded-full border transition-colors',
+                'px-3 py-1.5 rounded-full border transition-all font-bold uppercase tracking-wider',
                 filter === c.id
-                  ? 'border-emerald-400/80 bg-emerald-500/10 text-emerald-100'
-                  : 'border-slate-700/70 bg-slate-900/70 text-slate-300 hover:border-emerald-400/60 hover:text-emerald-100',
+                  ? 'border-emerald-500 bg-emerald-500/20 text-emerald-400 shadow-lg shadow-emerald-500/10'
+                  : 'border-slate-700 bg-slate-800/40 text-slate-400 hover:border-slate-500 hover:text-slate-200',
               ].join(' ')}
             >
               {c.label}
@@ -73,119 +75,114 @@ export const ShoppingList = () => {
           ))}
         </div>
 
+        {/* Toevoeg Formulier */}
         <form
           onSubmit={handleAdd}
-          className="flex items-center gap-2 mt-1 text-xs md:text-sm"
+          className="flex flex-col sm:flex-row items-center gap-3 mt-2"
         >
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Nieuw item toevoegen..."
-            className="flex-1 rounded-xl border border-slate-700/70 bg-slate-950/70 px-3 py-2 text-xs md:text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
+            placeholder="Wat hebben we nodig?"
+            className="w-full flex-1 rounded-2xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all"
           />
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value as ShoppingCategory)}
-            className="rounded-xl border border-slate-700/70 bg-slate-950/70 px-2 py-2 text-[11px] text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
-          >
-            <option value="supermarkt">Supermarkt</option>
-            <option value="apotheek">Apotheek</option>
-            <option value="bureaugerei">Bureaugerei</option>
-          </select>
-          <button
-            type="submit"
-            disabled={addMutation.isPending}
-            className="inline-flex items-center gap-1 rounded-xl bg-emerald-500 text-slate-950 px-3 py-2 text-xs font-medium hover:bg-emerald-400 disabled:opacity-60"
-          >
-            <Plus className="h-3 w-3" />
-            Toevoegen
-          </button>
+          <div className="flex w-full sm:w-auto gap-2">
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value as ShoppingCategory)}
+              className="flex-1 sm:flex-none rounded-2xl border border-slate-700 bg-slate-900/50 px-3 py-3 text-xs font-bold text-emerald-400 focus:outline-none"
+            >
+              <option value="supermarkt">Winkel</option>
+              <option value="apotheek">Apotheek</option>
+              <option value="bureaugerei">Bureau</option>
+            </select>
+            <button
+              type="submit"
+              disabled={addMutation.isPending}
+              className="bg-emerald-500 text-slate-950 px-5 py-3 rounded-2xl font-bold text-sm hover:bg-emerald-400 disabled:opacity-50 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Zet op lijst</span>
+            </button>
+          </div>
         </form>
 
+        {/* Loading State */}
         {isLoading && (
-          <div className="space-y-2 mt-2">
+          <div className="space-y-3 mt-4">
             {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 rounded-xl border border-slate-800/80 bg-slate-950/70 px-3 py-2"
-              >
-                <Skeleton className="h-4 w-4 rounded-md bg-slate-800/80" />
-                <Skeleton className="h-3 w-32 bg-slate-800/80" />
+              <div key={i} className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-900/40 px-4 py-4">
+                <Skeleton className="h-5 w-5 rounded-lg bg-slate-800" />
+                <Skeleton className="h-4 w-40 bg-slate-800" />
               </div>
             ))}
           </div>
         )}
 
+        {/* Error State */}
         {!isLoading && isError && (
-          <div className="mt-2 rounded-xl border border-red-500/60 bg-red-950/40 px-3 py-2 text-[11px] text-red-100 flex items-center gap-2">
-            <Trash2 className="h-3.5 w-3.5 text-red-300" />
-            <span>Kon de boodschappenlijst niet laden. Probeer later opnieuw.</span>
+          <div className="mt-4 rounded-2xl border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-200 flex items-center gap-3">
+            <Trash2 className="h-5 w-5 text-red-400" />
+            <span>Fout bij laden van de lijst.</span>
           </div>
         )}
 
+        {/* De Eigenlijke Lijst */}
         {!isLoading && !isError && (
           <motion.ul
-            className="mt-2 space-y-1.5 max-h-72 overflow-y-auto pr-1"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25 }}
+            className="mt-4 space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
           >
             {items.length === 0 && (
-              <li className="text-[11px] text-slate-500 px-1 py-1.5">
-                Nog geen items. Voeg je eerste item toe ✨
+              <li className="text-center py-10 text-slate-500 italic text-sm">
+                De koelkast is vol! Geen boodschappen nodig ✨
               </li>
             )}
-// Zoek in je code naar het map-gedeelte van de items en vervang het door dit blok:
+            
+            {items.map((item: any) => {
+              const isDone = item.is_done
+              return (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() => toggleMutation.mutate({ id: item.id, isDone: !isDone })}
+                    className={[
+                      'w-full flex items-center gap-4 rounded-2xl border px-4 py-4 text-left transition-all shadow-sm',
+                      // We gebruiken hier een lichte achtergrond voor de items om de tekst zwart te kunnen maken (leesbaarheid)
+                      'bg-white border-slate-200 hover:border-emerald-400 active:scale-[0.98]',
+                      isDone ? 'opacity-40' : 'opacity-100',
+                    ].join(' ')}
+                  >
+                    <div
+                      className={[
+                        'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border-2 transition-all',
+                        isDone
+                          ? 'bg-emerald-500 border-emerald-500 text-white'
+                          : 'bg-slate-50 border-slate-200 text-transparent',
+                      ].join(' ')}
+                    >
+                      <CheckSquare className="h-4 w-4" />
+                    </div>
+                    
+                    <span className={[
+                      'flex-1 truncate font-bold text-slate-900 text-base', // Zwarte dikke tekst
+                      isDone ? 'line-through text-slate-400' : ''
+                    ].join(' ')}>
+                      {item.title}
+                    </span>
 
-{items.map((item: any) => {
-  const isDone = item.is_done
-  return (
-    <li key={item.id}>
-      <button
-        type="button"
-        onClick={() =>
-          toggleMutation.mutate({ id: item.id, isDone: !isDone })
-        }
-        className={[
-          'w-full flex items-center gap-3 rounded-xl border px-3 py-3 text-left text-xs md:text-sm transition-all shadow-sm',
-          // Verbeterde achtergrond: donkerder en duidelijker contrast
-          'bg-slate-950/90 border-slate-800 hover:border-emerald-500/50',
-          isDone ? 'opacity-40' : 'opacity-100',
-        ].join(' ')}
-      >
-        <div
-          className={[
-            'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors',
-            isDone
-              ? 'bg-emerald-500 border-emerald-400 text-slate-950'
-              : 'bg-slate-900 border-slate-700 text-slate-500',
-          ].join(' ')}
-        >
-          <CheckSquare className="h-3.5 w-3.5" />
-        </div>
-        
-        {/* De tekst van het item: geforceerd naar wit voor maximale leesbaarheid */}
-        <span className={[
-          'flex-1 truncate font-semibold',
-  // We forceren hier een donkere kleur (slate-900) voor maximale leesbaarheid op witte balken
-          isDone ? 'line-through text-slate-400' : 'text-slate-900'
-          ].join(' ')}>
-          {item.title}
-        </span>
-
-        {/* Categorie-label: iets feller gemaakt */}
-        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-500/80 bg-emerald-500/5 px-2 py-0.5 rounded-md border border-emerald-500/10">
-          {item.category}
-        </span>
-      </button>
-    </li>
-  )
-})}
+                    <span className="text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 px-2 py-1 rounded-lg border border-slate-200">
+                      {item.category}
+                    </span>
+                  </button>
+                </li>
+              )
+            })}
           </motion.ul>
         )}
       </div>
     </Card>
   )
 }
-
