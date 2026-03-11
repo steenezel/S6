@@ -39,7 +39,9 @@ async function fetchIrailConnections(params: {
 }): Promise<IrailConnection[]> {
   const { from, to, date, time, timeSel } = params
   
+  // ddmmyy formaat voor iRail
   const formattedDate = date.split('-').reverse().map(s => s.slice(-2)).join('')
+  // hhmm formaat voor iRail
   const formattedTime = time.replace(':', '')
 
   const url = new URL('https://api.irail.be/connections')
@@ -47,7 +49,6 @@ async function fetchIrailConnections(params: {
   url.searchParams.set('to', to)
   url.searchParams.set('date', formattedDate)
   url.searchParams.set('time', formattedTime)
-  // De API gebruikt 'depart' of 'arrive'
   url.searchParams.set('timesel', timeSel === 'departure' ? 'depart' : 'arrive')
   url.searchParams.set('format', 'json')
   url.searchParams.set('lang', 'nl')
@@ -61,13 +62,12 @@ async function fetchIrailConnections(params: {
   const mapped = rawConnections.map((c: any, index: number) => {
     const depTime = Number(c.departure.time) * 1000
     const arrTime = Number(c.arrival.time) * 1000
-    const departure = new Date(depTime)
-    const arrival = new Date(arrTime)
     
     return {
       id: c.id ?? `conn-${index}`,
-      departureTime: departure.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }),
-      arrivalTime: arrival.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }),
+      departureTime: new Date(depTime).toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }),
+      arrivalTime: new Date(arrTime).toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }),
+      departureTimeRaw: depTime,
       arrivalTimeRaw: arrTime,
       durationMinutes: Math.round((arrTime - depTime) / 1000 / 60),
       platform: c.departure.platform ?? null,
@@ -76,12 +76,19 @@ async function fetchIrailConnections(params: {
     }
   })
 
-  // Als we op aankomst zoeken, willen we de resultaten die het dichtst bij het tijdstip liggen
+  // SORTERING LOGICA:
   if (timeSel === 'arrival') {
-    return mapped.sort((a: any, b: any) => b.arrivalTimeRaw - a.arrivalTimeRaw).slice(0, 4)
+    // Bij aankomst: sorteer chronologisch zodat de VROEGSTE trein eerst staat
+    // Maar filter enkel de treinen die relevant zijn voor het gevraagde blok
+    return mapped
+      .sort((a: any, b: any) => a.arrivalTimeRaw - b.arrivalTimeRaw)
+      .slice(0, 4)
   }
 
-  return mapped.slice(0, 4)
+  // Bij vertrek: gewoon chronologisch op vertrek
+  return mapped
+    .sort((a: any, b: any) => a.departureTimeRaw - b.departureTimeRaw)
+    .slice(0, 4)
 }
 
 export const TrainTracker = () => {
