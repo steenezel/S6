@@ -6,7 +6,7 @@ import {
   TrainFront, 
   LogOut, 
   Sparkles,
-  LayoutDashboard
+  UserCircle
 } from 'lucide-react'
 import { TrainTracker } from './TrainTracker'
 import { ShoppingList } from './ShoppingList'
@@ -19,135 +19,111 @@ type DashboardProps = {
   userName?: string
 }
 
-// SidebarItemProps definitie om TS errors te voorkomen
-type SidebarItemProps = {
-  icon: any
-  label: string
-  active?: boolean
-}
-
-const SidebarItem = ({ icon: Icon, label, active }: SidebarItemProps) => {
-  return (
-    <button
-      type="button"
-      className={`w-full flex items-center gap-4 rounded-2xl px-4 py-3.5 text-left transition-all group ${
-        active
-          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-lg shadow-emerald-500/5'
-          : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-100 border border-transparent'
-      }`}
-    >
-      <Icon className={`h-5 w-5 transition-transform group-hover:scale-110 ${active ? 'text-emerald-400' : 'text-slate-500'}`} />
-      <span className="text-sm font-semibold tracking-tight">{label}</span>
-    </button>
-  )
-}
-
 export const Dashboard = ({ 
   familyName = 'S6.Hub', 
   userName = 'Pieter Jan' 
 }: DashboardProps) => {
   
   const handleSignOut = async () => {
-    await (supabase as any).auth.signOut();
+    // Gebruik de any cast om TS-fouten op de auth client te voorkomen
+    await (supabase.auth as any).signOut();
+    window.location.href = '/'; // Forceer terugkeer naar login
   }
 
   return (
-    <div className="min-h-screen bg-[#06080F] text-slate-50 flex font-sans antialiased overflow-x-hidden relative">
-      {/* Achtergrond-gloed voor diepte */}
-      <div className="absolute top-0 right-0 h-[500px] w-[500px] bg-emerald-600/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 h-[400px] w-[400px] bg-sky-600/5 rounded-full blur-[100px] pointer-events-none" />
+    <div className="min-h-screen bg-[#06080F] text-slate-50 font-sans antialiased overflow-x-hidden relative flex flex-col">
+      {/* Sfeerverlichting achtergrond */}
+      <div className="absolute top-0 right-0 h-[300px] w-[300px] bg-emerald-600/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 h-[300px] w-[300px] bg-sky-600/10 rounded-full blur-[100px] pointer-events-none" />
 
-      {/* Sidebar */}
-      <aside className="hidden lg:flex w-72 flex-col border-r border-slate-800/40 bg-[#0B101D]/40 backdrop-blur-2xl z-30">
-        <div className="px-8 py-8 flex items-center gap-4">
-          <div className="h-11 w-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shadow-lg">
-            <Sparkles className="h-5 w-5 text-emerald-400" />
-          </div>
+      {/* Mobiele Header */}
+      <header className="sticky top-0 z-30 border-b border-slate-800/60 bg-[#06080F]/80 backdrop-blur-xl px-6 py-5">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex flex-col text-left">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500/70">S6 GEZIN</span>
-            <span className="text-lg font-bold tracking-tight text-white">{familyName}</span>
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="h-3 w-3 text-emerald-400" />
+              <span className="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-black">{familyName}</span>
+            </div>
+            <h1 className="text-xl font-black text-white tracking-tight">
+              Dag, <span className="text-emerald-400">{userName}</span>
+            </h1>
           </div>
-        </div>
-
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          <SidebarItem icon={LayoutDashboard} label="Overzicht" active />
-          <SidebarItem icon={CalendarDays} label="Gezinsagenda" />
-          <SidebarItem icon={ShoppingBasket} label="Boodschappen" />
-          <SidebarItem icon={BarChart3} label="Family Polls" />
-          <SidebarItem icon={TrainFront} label="Trein Tracker" />
-        </nav>
-
-        <div className="p-6 mt-auto">
-          <button 
-            onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all border border-transparent hover:border-red-500/20"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="text-sm font-medium">Sessie beëindigen</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col relative z-10">
-        <header className="sticky top-0 z-20 border-b border-slate-800/40 bg-[#06080F]/60 backdrop-blur-md">
-          <div className="max-w-7xl mx-auto px-6 md:px-10 py-5 flex items-center justify-between">
-            <div className="flex flex-col text-left">
-              <span className="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-bold mb-1">WELKOM THUIS</span>
-              <h1 className="text-xl md:text-xl font-black text-white tracking-tight">
-                Welkom, <span className="text-emerald-400">{userName}</span> 🐇
-              </h1>
+          
+          <div className="flex flex-col items-end gap-2">
+            {/* Status Indicator */}
+            <div className="h-9 w-9 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 flex items-center justify-center">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             </div>
             
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-full border-2 border-emerald-500/20 p-0.5">
-                <div className="h-full w-full rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <div className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-10 py-8 md:py-12">
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-            <div className="xl:col-span-8 space-y-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-                  <GoogleCalendarWidget />
-                </motion.div>
-
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
-                  <Card className="h-full bg-[#0B101D]/60 border-slate-700/50 backdrop-blur-xl rounded-[2.5rem] p-8 shadow-2xl group transition-all hover:border-violet-500/30">
-                    <div className="flex items-center gap-4 mb-8">
-                      <div className="h-12 w-12 rounded-2xl bg-violet-500/10 border border-violet-500/30 flex items-center justify-center group-hover:bg-violet-500/20 transition-colors">
-                        <BarChart3 className="h-6 w-6 text-violet-400" />
-                      </div>
-                      <div className="text-left">
-                        <h2 className="text-xl font-bold text-white tracking-tight">Family Poll</h2>
-                        <p className="text-sm text-slate-400">Stem op de weekplanning</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-center h-40 rounded-3xl border-2 border-dashed border-slate-800 bg-slate-900/30">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Module Coming Soon</p>
-                    </div>
-                  </Card>
-                </motion.div>
-              </div>
-
-              <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
-                <ShoppingList />
-              </motion.section>
-            </div>
-
-            <div className="xl:col-span-4 space-y-8">
-              <motion.section initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
-                <TrainTracker />
-              </motion.section>
-            </div>
+            {/* Nieuwe Uitlogknop: Direct onder de status indicator */}
+            <button 
+              onClick={handleSignOut}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 active:scale-95 transition-all"
+            >
+              <LogOut className="h-3 w-3" />
+              <span className="text-[9px] font-black uppercase tracking-widest">Logout</span>
+            </button>
           </div>
         </div>
+      </header>
+
+      {/* Main Content: Single Column Layout voor Mobile */}
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-6 space-y-8 z-10">
+        
+        {/* Agenda Sectie */}
+        <motion.section 
+          initial={{ opacity: 0, y: 15 }} 
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <GoogleCalendarWidget />
+        </motion.section>
+
+        {/* Trein Tracker Sectie */}
+        <motion.section 
+          initial={{ opacity: 0, y: 15 }} 
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <TrainTracker />
+        </motion.section>
+
+        {/* Boodschappen Sectie */}
+        <motion.section 
+          initial={{ opacity: 0, y: 15 }} 
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <ShoppingList />
+        </motion.section>
+
+        {/* Poll Module placeholder */}
+        <motion.section 
+          initial={{ opacity: 0, y: 15 }} 
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+        >
+          <Card className="bg-[#0B101D] border-slate-800 rounded-[2rem] p-6 shadow-xl overflow-hidden relative group">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="h-10 w-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+                <BarChart3 className="h-5 w-5 text-violet-400" />
+              </div>
+              <div className="text-left">
+                <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 text-left">Family Poll</h2>
+              </div>
+            </div>
+            <div className="h-24 rounded-2xl border-2 border-dashed border-slate-800/50 bg-slate-900/20 flex items-center justify-center">
+              <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Next Update</span>
+            </div>
+          </Card>
+        </motion.section>
+
       </main>
+
+      {/* Subtiele footer info */}
+      <footer className="py-8 px-6 text-center opacity-20">
+        <p className="text-[10px] font-bold tracking-[0.5em] uppercase">S6 System v2.0</p>
+      </footer>
     </div>
   )
 }
