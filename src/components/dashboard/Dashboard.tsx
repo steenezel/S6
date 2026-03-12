@@ -43,7 +43,7 @@ export const Dashboard = ({
               <Sparkles className="h-3 w-3 text-emerald-400" />
               <span className="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-black">{familyName}</span>
             </div>
-           <h1 className="text-l font-black text-white tracking-tight">
+           <h1 className="text-base font-black text-white tracking-tight">
             Konnichiwa, <span className="text-emerald-400">{displayUserName}</span>
           </h1>
           </div>

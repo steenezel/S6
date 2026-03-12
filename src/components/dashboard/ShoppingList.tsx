@@ -124,7 +124,7 @@ const ShoppingRow = ({ item, onToggle, onDelete, isCompleted = false }: any) => 
     {/* Checkbox */}
     <button
       onClick={() => onToggle({ id: item.id, isDone: !item.is_done })}
-      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
+      className={`flex h-5 w-3 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
         isCompleted 
           ? 'bg-emerald-500 border-emerald-500 text-slate-950' 
           : 'bg-slate-900 border-slate-700 text-transparent hover:border-emerald-500/50'
