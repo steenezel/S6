@@ -1,13 +1,9 @@
 import { motion } from 'framer-motion'
 import { 
-  CalendarDays, 
-  ShoppingBasket, 
   BarChart3, 
-  TrainFront, 
   LogOut, 
   Sparkles,
-  UserCircle
-} from 'lucide-react'
+ } from 'lucide-react'
 import { TrainTracker } from './TrainTracker'
 import { ShoppingList } from './ShoppingList'
 import { GoogleCalendarWidget } from './GoogleCalendarWidget'
