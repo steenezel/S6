@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-// VERVANG DIT DOOR JOUW EFFECTIEVE ID
+// VUL HIER JE EFFECTIEVE ID IN
 const FAMILY_CALENDAR_ID = 'family17033390667928334518@group.calendar.google.com';
 
 export const getCalendarEvents = async (date: string) => {
@@ -30,6 +30,7 @@ export const getCalendarEvents = async (date: string) => {
 export const addCalendarEvent = async (summary: string, start: string, end: string) => {
   const { data: { session } } = await (supabase.auth as any).getSession();
   const token = session?.provider_token;
+  if (!token) return false;
 
   const res = await fetch(
     `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(FAMILY_CALENDAR_ID)}/events`,
