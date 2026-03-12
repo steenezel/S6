@@ -54,7 +54,7 @@ export const Dashboard = ({
             {/* Nieuwe Uitlogknop: Direct onder de status indicator */}
             <button 
               onClick={handleSignOut}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 active:scale-95 transition-all"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-200/50 border border-red-500/20 text-red-400 active:scale-95 transition-all"
             >
               <LogOut className="h-3 w-3" />
               <span className="text-[9px] font-black uppercase tracking-widest">Logout</span>

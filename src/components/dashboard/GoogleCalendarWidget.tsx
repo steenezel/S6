@@ -10,7 +10,6 @@ export const GoogleCalendarWidget = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [isAdding, setIsAdding] = useState(false)
   
-  // Form state
   const [summary, setSummary] = useState('')
   const [startTime, setStartTime] = useState('12:00')
 
@@ -23,7 +22,6 @@ export const GoogleCalendarWidget = () => {
   const addMutation = useMutation({
     mutationFn: async () => {
       const startDateTime = `${selectedDate}T${startTime}:00`
-      // Standaard duur van 1 uur instellen
       const endHour = (parseInt(startTime.split(':')[0]) + 1).toString().padStart(2, '0')
       const endDateTime = `${selectedDate}T${endHour}:${startTime.split(':')[1]}:00`
       return addCalendarEvent(summary, startDateTime, endDateTime)
@@ -71,7 +69,7 @@ export const GoogleCalendarWidget = () => {
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
                 />
                 <div className="flex gap-2">
-                  <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white" />
+                  <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white outline-none" />
                   <button onClick={() => addMutation.mutate()} disabled={!summary || addMutation.isPending} className="bg-blue-500 text-slate-950 px-4 rounded-xl font-bold text-xs flex items-center gap-2">
                     {addMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Opslaan'}
                   </button>
@@ -95,14 +93,24 @@ export const GoogleCalendarWidget = () => {
             <p className="text-slate-600 text-xs italic text-center py-10 uppercase tracking-widest font-medium">Geen afspraken</p>
           ) : (
             events?.map((event: any) => (
-              <div key={event.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-800/30 transition-colors border-b border-slate-800/30 last:border-0">
-                <div className="text-right min-w-[50px] leading-tight font-black text-white text-sm">
+              <div key={event.id} className="flex items-start gap-4 p-3 rounded-xl hover:bg-slate-800/30 transition-colors border-b border-slate-800/30 last:border-0">
+                <div className="text-right min-w-[50px] pt-0.5 leading-tight font-black text-white text-sm">
                   {event.start?.dateTime ? new Date(event.start.dateTime).toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' }) : 'DAG'}
                 </div>
-                <div className="w-1 h-8 rounded-full bg-blue-500/30" />
+                {/* De verticale lijn krijgt nu een vaste hoogte of stretch, we gebruiken h-5 voor een subtiel lijntje bij wrappen */}
+                <div className="w-1 h-5 mt-1 rounded-full bg-blue-500/30 shrink-0" />
+                
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold text-slate-200 truncate">{event.summary}</div>
-                  {event.location && <div className="flex items-center gap-1 text-[9px] text-slate-500 font-bold uppercase mt-0.5"><MapPin className="h-2 w-2" /> {event.location}</div>}
+                  {/* Truncate verwijderd, normal-case toegevoegd voor betere wrap-leesbaarheid */}
+                  <div className="text-sm font-bold text-slate-200 leading-snug break-words">
+                    {event.summary}
+                  </div>
+                  {event.location && (
+                    <div className="flex items-start gap-1 text-[9px] text-slate-500 font-bold uppercase mt-1 leading-tight">
+                      <MapPin className="h-2 w-2 mt-0.5 shrink-0" /> 
+                      <span className="break-words">{event.location}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))

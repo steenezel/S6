@@ -74,7 +74,7 @@ export const TrainTracker = () => {
               key={r.id}
               onClick={() => setActiveId(r.id)}
               className={`py-2 px-3 text-[10px] font-bold uppercase rounded-xl border transition-all ${
-                activeId === r.id ? 'bg-cyan-500 border-cyan-400 text-slate-950' : 'bg-slate-900/40 border-slate-800 text-slate-500'
+                activeId === r.id ? 'bg-cyan-500 border-cyan-400 text-fuchsia-600' : 'bg-slate-900/40 border-slate-800 text-slate-500'
               }`}
             >
               {r.label}
