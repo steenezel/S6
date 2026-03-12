@@ -121,29 +121,35 @@ const ShoppingRow = ({ item, onToggle, onDelete, isCompleted = false }: any) => 
     exit={{ opacity: 0, x: -10 }}
     className="group flex items-center gap-3 py-2 px-2 hover:bg-slate-800/40 transition-colors rounded-xl border-b border-slate-800/30 last:border-0"
   >
-    {/* Checkbox */}
+    {/* Elegante Cirkel Checkbox */}
     <button
       onClick={() => onToggle({ id: item.id, isDone: !item.is_done })}
-      className={`flex h-5 w-3 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
+      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-300 ${
         isCompleted 
-          ? 'bg-emerald-500 border-emerald-500 text-slate-950' 
-          : 'bg-slate-900 border-slate-700 text-transparent hover:border-emerald-500/50'
+          ? 'bg-emerald-500 border-emerald-500' 
+          : 'bg-transparent border-slate-700 hover:border-emerald-500/50'
       }`}
     >
-      <CheckSquare className="h-3 w-3" />
+      <motion.div
+        initial={false}
+        animate={{ scale: isCompleted ? 1 : 0 }}
+        className="text-slate-950"
+      >
+        <CheckSquare className="h-3 w-3 stroke-[3px]" />
+      </motion.div>
     </button>
 
-    {/* Tekst: text-slate-200 zorgt voor contrast op de donkere achtergrond */}
-    <span className={`flex-1 font-bold text-sm text-left truncate ${
+    {/* Tekst */}
+    <span className={`flex-1 font-bold text-sm text-left truncate transition-colors duration-300 ${
       isCompleted ? 'line-through text-slate-600' : 'text-slate-200'
     }`}>
       {item.title}
     </span>
 
-    {/* Vuilbakje: nu met text-slate-500 voor zichtbaarheid, wordt rood bij hover */}
+    {/* Vuilbakje */}
     <button
       onClick={() => onDelete({ id: item.id })}
-      className="p-1.5 text-slate-500 hover:text-red-500 transition-colors md:opacity-0 md:group-hover:opacity-100"
+      className="p-1.5 text-slate-700 hover:text-red-500 transition-colors md:opacity-0 md:group-hover:opacity-100"
       title="Verwijder item"
     >
       <Trash2 className="h-4 w-4" />
