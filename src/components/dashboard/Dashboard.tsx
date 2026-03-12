@@ -20,6 +20,9 @@ export const Dashboard = ({
   userName = 'Pieter Jan' 
 }: DashboardProps) => {
   
+  // Oplossing: Forceer de volledige naam als de prop enkel "Pieter" bevat
+  const displayUserName = userName === 'Pieter' ? 'Pieter Jan' : userName;
+  
   const handleSignOut = async () => {
     // Gebruik de any cast om TS-fouten op de auth client te voorkomen
     await (supabase.auth as any).signOut();
@@ -40,9 +43,9 @@ export const Dashboard = ({
               <Sparkles className="h-3 w-3 text-emerald-400" />
               <span className="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-black">{familyName}</span>
             </div>
-            <h1 className="text-xl font-black text-white tracking-tight">
-              Dag, <span className="text-emerald-400">{userName}</span>
-            </h1>
+           <h1 className="text-xl font-black text-white tracking-tight">
+            Dag, <span className="text-emerald-400">{displayUserName}</span>
+          </h1>
           </div>
           
           <div className="flex flex-col items-end gap-2">
@@ -54,7 +57,7 @@ export const Dashboard = ({
             {/* Nieuwe Uitlogknop: Direct onder de status indicator */}
             <button 
               onClick={handleSignOut}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-200/50 border border-red-500/20 text-red-400 active:scale-95 transition-all"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-200/80 border border-red-500/20 text-red-400 active:scale-95 transition-all"
             >
               <LogOut className="h-3 w-3" />
               <span className="text-[9px] font-black uppercase tracking-widest">Logout</span>
