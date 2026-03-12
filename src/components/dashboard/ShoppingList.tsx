@@ -119,27 +119,29 @@ const ShoppingRow = ({ item, onToggle, onDelete, isCompleted = false }: any) => 
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0, x: -10 }}
-    className="group flex items-center gap-3 py-2 px-2 hover:bg-slate-800/40 transition-colors rounded-xl border-b border-slate-800/30 last:border-0"
+    className="group flex items-center gap-3 py-3 px-2 hover:bg-slate-800/40 transition-colors rounded-xl border-b border-slate-800/30 last:border-0 !bg-transparent"
   >
-    {/* Elegante Cirkel Checkbox */}
-    <button
-      onClick={() => onToggle({ id: item.id, isDone: !item.is_done })}
-      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-300 ${
-        isCompleted 
-          ? 'bg-emerald-500 border-emerald-500' 
-          : 'bg-transparent border-slate-700 hover:border-emerald-500/50'
-      }`}
-    >
-      <motion.div
-        initial={false}
-        animate={{ scale: isCompleted ? 1 : 0 }}
-        className="text-slate-950"
+    {/* De Checkbox Container: h-5 w-5 geforceerd */}
+    <div className="flex items-center justify-center h-5 w-5 shrink-0">
+      <button
+        onClick={() => onToggle({ id: item.id, isDone: !item.is_done })}
+        className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all duration-300 !shadow-none ${
+          isCompleted 
+            ? 'bg-emerald-500 border-emerald-500' 
+            : 'bg-transparent border-slate-700 hover:border-emerald-500/50'
+        }`}
       >
-        <CheckSquare className="h-3 w-3 stroke-[3px]" />
-      </motion.div>
-    </button>
+        <motion.div
+          initial={false}
+          animate={{ scale: isCompleted ? 1 : 0 }}
+          className="text-slate-950 flex items-center justify-center"
+        >
+          <CheckSquare className="h-3 w-3 stroke-[3px]" />
+        </motion.div>
+      </button>
+    </div>
 
-    {/* Tekst */}
+    {/* Tekst: text-slate-200 voor contrast */}
     <span className={`flex-1 font-bold text-sm text-left truncate transition-colors duration-300 ${
       isCompleted ? 'line-through text-slate-600' : 'text-slate-200'
     }`}>
@@ -149,7 +151,7 @@ const ShoppingRow = ({ item, onToggle, onDelete, isCompleted = false }: any) => 
     {/* Vuilbakje */}
     <button
       onClick={() => onDelete({ id: item.id })}
-      className="p-1.5 text-slate-700 hover:text-red-500 transition-colors md:opacity-0 md:group-hover:opacity-100"
+      className="p-1.5 text-slate-700 hover:text-red-500 transition-colors md:opacity-0 md:group-hover:opacity-100 shrink-0"
       title="Verwijder item"
     >
       <Trash2 className="h-4 w-4" />
