@@ -1,71 +1,50 @@
-export type CalendarEvent = {
-  id: string
-  summary: string
-  description?: string
-  start: string
-  end: string
-  location?: string
-}
+import { supabase } from './supabase';
 
-type GoogleCalendarEvent = {
-  id: string
-  summary?: string
-  description?: string
-  location?: string
-  start?: { dateTime?: string; date?: string }
-  end?: { dateTime?: string; date?: string }
-}
+// VERVANG DIT DOOR JOUW EFFECTIEVE ID
+const FAMILY_CALENDAR_ID = 'family17033390667928334518@group.calendar.google.com';
 
-type GoogleCalendarResponse = {
-  items?: GoogleCalendarEvent[]
-}
+export const getCalendarEvents = async (date: string) => {
+  const { data: { session } } = await (supabase.auth as any).getSession();
+  const token = session?.provider_token;
+  if (!token) return [];
 
-export async function fetchCalendarEvents(params: {
-  accessToken: string
-  calendarId: string
-  maxResults?: number
-}): Promise<CalendarEvent[]> {
-  const { accessToken, calendarId, maxResults = 10 } = params
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
 
-  const timeMin = new Date().toISOString()
-  const url = new URL(
-    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`,
-  )
-
-  url.searchParams.set('maxResults', String(maxResults))
-  url.searchParams.set('singleEvents', 'true')
-  url.searchParams.set('orderBy', 'startTime')
-  url.searchParams.set('timeMin', timeMin)
+  const url = new URL(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(FAMILY_CALENDAR_ID)}/events`);
+  url.searchParams.set('timeMin', startOfDay.toISOString());
+  url.searchParams.set('timeMax', endOfDay.toISOString());
+  url.searchParams.set('singleEvents', 'true');
+  url.searchParams.set('orderBy', 'startTime');
 
   const res = await fetch(url.toString(), {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  })
+    headers: { Authorization: `Bearer ${token}` }
+  });
 
-  if (!res.ok) {
-    throw new Error(`Google Calendar request failed: ${res.status}`)
-  }
+  const data = await res.json();
+  return data.items || [];
+};
 
-  const data = (await res.json()) as GoogleCalendarResponse
-  const items = data.items ?? []
+export const addCalendarEvent = async (summary: string, start: string, end: string) => {
+  const { data: { session } } = await (supabase.auth as any).getSession();
+  const token = session?.provider_token;
 
-  return items.map((item) => {
-    const start =
-      item.start?.dateTime ??
-      (item.start?.date ? `${item.start.date}T00:00:00Z` : new Date().toISOString())
-    const end =
-      item.end?.dateTime ??
-      (item.end?.date ? `${item.end.date}T23:59:59Z` : new Date().toISOString())
-
-    return {
-      id: item.id,
-      summary: item.summary ?? 'Geen titel',
-      description: item.description,
-      start,
-      end,
-      location: item.location,
+  const res = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(FAMILY_CALENDAR_ID)}/events`,
+    {
+      method: 'POST',
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({
+        summary,
+        start: { dateTime: start, timeZone: 'Europe/Brussels' },
+        end: { dateTime: end, timeZone: 'Europe/Brussels' }
+      })
     }
-  })
-}
-
+  );
+  return res.ok;
+};

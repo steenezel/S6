@@ -32,7 +32,7 @@ export default function App() {
           prompt: 'consent', // Dwingt Google om het toestemmingsscherm te tonen
           access_type: 'offline', // Nodig voor het verversen van tokens
           // Voeg hier de specifieke scopes toe voor de agenda
-          scope: 'openid email profile https://www.googleapis.com/auth/calendar.readonly'
+          scope: 'openid email profile https://www.googleapis.com/auth/calendar'
         }
       } 
     });
